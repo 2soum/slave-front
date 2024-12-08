@@ -1,5 +1,6 @@
 // src/pages/Sprint.tsx
 import BackgroundSVG from '../components/SVGPackage';
+import Header from '../components/Header';
 
 const sprintsData = [
   {
@@ -127,6 +128,7 @@ const sprintsData = [
 const Sprint = () => {
   return (
       <div className="min-h-screen relative">
+        <Header />
         <BackgroundSVG />
         <div className="relative z-10 pt-24 px-4 container mx-auto">
           <div className="text-center mb-12">

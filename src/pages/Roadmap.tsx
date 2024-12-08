@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
+import BackgroundSVG from "../components/SVGPackage.tsx";
 
 
 interface DeliveryStatusProps {
@@ -87,6 +88,7 @@ const PackageRoadmap = () => {
   return (
     <div className="min-h-screen ">
       <Header />
+      <BackgroundSVG />
       <div className="container mx-auto p-8">
         <div className="flex flex-col md:grid grid-cols-12 text-gray-50">
           {steps.map((step, index) => (
