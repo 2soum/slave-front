@@ -1,4 +1,5 @@
 import React from "react";
+import { FaCheckCircle, FaTimesCircle, FaHourglass } from "react-icons/fa"; // Importer les icônes
 
 // Définir le type pour les événements
 type Event = {
@@ -96,8 +97,6 @@ const sprintEvents: Event[] = [
 const Timeline: React.FC = () => {
   return (
       <div className="w-full px-4">
-        {/* <h2 className="text-2xl font-bold text-center mb-6">Timeline</h2>*/}
-
         {/* Grille à 3 colonnes */}
         <div className="grid grid-cols-3 w-full">
           <div className="border-none"></div>
@@ -108,32 +107,44 @@ const Timeline: React.FC = () => {
               // Déterminer la couleur en fonction de l'état de l'événement
               const statusColor =
                   event.status === "completed"
-                      ? "bg-green-500"
+                      ? "bg-green-500 bg-opacity-30"
                       : event.status === "cancelled"
-                          ? "bg-blue-500"
-                          : "bg-yellow-400";
+                          ? "bg-blue-500 bg-opacity-30"
+                          : "bg-yellow-400 bg-opacity-30";
+
+              // Choisir l'icône en fonction de l'état de l'événement
+              const statusIcon =
+                  event.status === "completed"
+                      ? <FaCheckCircle className="text-green-500" />
+                      : event.status === "cancelled"
+                          ? <FaTimesCircle className="text-blue-500" />
+                          : <FaHourglass className="text-yellow-400" />;
 
               return (
                   <li key={index} className="mb-10 ml-6">
                     {/* Cercle pour indiquer l'état */}
                     <span
                         className={`absolute flex items-center justify-center w-8 h-8 -left-4 rounded-full ${statusColor}`}
-                    ></span>
+                    >
+                  {statusIcon} {/* Affichage de l'icône */}
+                </span>
 
                     {/* Titre de l'événement */}
-                    <h3 className="flex items-center mb-1 text-lg font-semibold text-white-900">
+                    <h3 className="flex items-center mb-1 text-lg font-semibold text-white">
                       {event.title}
                     </h3>
 
                     {/* Date de l'événement */}
-                    <time className="block mb-2 text-sm font-normal text-gray-400">
+                    <time className="block mb-2 text-sm font-normal text-gray-300">
                       {event.date}
                     </time>
 
-                    {/* Description de l'événement */}
-                    <p className="text-base font-normal text-gray-500">
-                      {event.description}
-                    </p>
+                    {/* Description de l'événement dans un encadré transparent */}
+                    <div className={`p-4 rounded-md border ${statusColor}`}>
+                      <p className="text-base font-normal text-white">
+                        {event.description}
+                      </p>
+                    </div>
                   </li>
               );
             })}
@@ -146,6 +157,3 @@ const Timeline: React.FC = () => {
 };
 
 export default Timeline;
-
-
-
