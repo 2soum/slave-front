@@ -1,31 +1,27 @@
 import React from 'react';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Header from '../components/Header';
 import BackgroundSVG from "../components/SVGPackage.tsx";
 import Timeline from '../components/Timeline.tsx';
 
+const PackageRoadmap: React.FC = () => {
+    return (
+        <div className="relative flex flex-col min-h-screen">
+            <div className="absolute inset-0 z-0">
+                <BackgroundSVG />
+            </div>
 
-const PackageRoadmap :React.FC=() => {
-  return (
-    <div className='flex flex-col'>
-    {/* Fond SVG */}
-    <div className="absolute inset-0 z-0">
-      <BackgroundSVG />
-    </div>
+            <div className="relative z-10">
+                {/* Header */}
+                <Header />
 
-    {/* Header */}
-    <div>
-      <Header />
-    </div>
-
-    {/* Timeline au centre */}
-    <div>
-      <Timeline />
-    </div>
-  </div>
-
- 
-  );
+                {/* Timeline */}
+                <div className="mt-20">
+                    <Timeline />
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default PackageRoadmap;
