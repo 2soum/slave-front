@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./index.html",  // Si tu as un fichier HTML principal
     "./src/**/*.{js,ts,jsx,tsx}", // Scanne tous les fichiers JS, TS, JSX, et TSX dans src
+    "node_modules/flowbite/**/*.js",
   ],
   theme: {
     extend: {
@@ -22,5 +23,7 @@ module.exports = {
       }
     }
   },
-  plugins: [],
+  plugins: [
+    require("flowbite/plugin")
+  ],
 };
