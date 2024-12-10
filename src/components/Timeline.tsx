@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaCheckCircle, FaTimesCircle, FaHourglass } from "react-icons/fa"; // Importer les icônes
 
 // Définir le type pour les événements
@@ -95,64 +95,92 @@ const sprintEvents: Event[] = [
 ];
 
 const Timeline: React.FC = () => {
+  const [visibleSteps, setVisibleSteps] = useState<number[]>([]);
+
+  useEffect(() => {
+    const intervals = sprintEvents.map((_, index) =>
+      setTimeout(() => {
+        setVisibleSteps((prevSteps) => [...prevSteps, index]);
+      }, index * 350) // Further reduced the timing for faster appearance
+    );
+
+    return () => intervals.forEach(clearTimeout);
+  }, []);
+
   return (
-      <div className="w-full px-4">
-        {/* Grille à 3 colonnes */}
-        <div className="grid grid-cols-3 w-full">
-          <div className="border-none"></div>
+    <div className="w-full px-4">
+      <style>
+        {`
+          @keyframes fadeInSlideDown {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
 
-          {/* Colonne centrale avec la timeline */}
-          <ol className="relative border-l border-gray-200 col-span-1 mx-auto">
-            {sprintEvents.map((event, index) => {
-              // Déterminer la couleur en fonction de l'état de l'événement
-              const statusColor =
-                  event.status === "completed"
-                      ? "bg-green-500 bg-opacity-30"
-                      : event.status === "cancelled"
-                          ? "bg-blue-500 bg-opacity-30"
-                          : "bg-yellow-400 bg-opacity-30";
+          .fadeInSlideDown {
+            animation: fadeInSlideDown 2s ease-in forwards;
+          }
+        `}
+      </style>
+      <div className="grid grid-cols-3 w-full">
+        <div className="border-none"></div>
 
-              // Choisir l'icône en fonction de l'état de l'événement
-              const statusIcon =
-                  event.status === "completed"
-                      ? <FaCheckCircle className="text-green-500" />
-                      : event.status === "cancelled"
-                          ? <FaTimesCircle className="text-blue-500" />
-                          : <FaHourglass className="text-yellow-400" />;
+        {/* Colonne centrale avec la timeline */}
+        <ol className="relative border-l border-gray-200 col-span-1 mx-auto">
+          {sprintEvents.map((event, index) => {
+            if (!visibleSteps.includes(index)) return null;
+            // Déterminer la couleur en fonction de l'état de l'événement
+            const statusColor =
+                event.status === "completed"
+                    ? "bg-green-500 bg-opacity-30"
+                    : event.status === "cancelled"
+                        ? "bg-blue-500 bg-opacity-30"
+                        : "bg-yellow-400 bg-opacity-30";
 
-              return (
-                  <li key={index} className="mb-10 ml-6">
-                    {/* Cercle pour indiquer l'état */}
-                    <span
-                        className={`absolute flex items-center justify-center w-8 h-8 -left-4 rounded-full ${statusColor}`}
-                    >
-                  {statusIcon} {/* Affichage de l'icône */}
-                </span>
+            // Choisir l'icône en fonction de l'état de l'événement
+            const statusIcon =
+                event.status === "completed"
+                    ? <FaCheckCircle className="text-green-500" />
+                    : event.status === "cancelled"
+                        ? <FaTimesCircle className="text-blue-500" />
+                        : <FaHourglass className="text-yellow-400" />;
 
-                    {/* Titre de l'événement */}
-                    <h3 className="flex items-center mb-1 text-lg font-semibold text-white">
-                      {event.title}
-                    </h3>
+            return (
+                <li key={index} className="mb-10 ml-6 fadeInSlideDown" >
+                  {/* Cercle pour indiquer l'état */}
+                  <span
+                      className={`absolute flex items-center justify-center w-8 h-8 -left-4 rounded-full ${statusColor}`}
+                  >
+                {statusIcon} {/* Affichage de l'icône */}
+              </span>
 
-                    {/* Date de l'événement */}
-                    <time className="block mb-2 text-sm font-normal text-gray-300">
-                      {event.date}
-                    </time>
+                  {/* Titre de l'événement */}
+                  <h3 className="flex items-center mb-1 text-lg font-semibold text-white ">
+                    {event.title}
+                  </h3>
 
-                    {/* Description de l'événement dans un encadré transparent */}
-                    <div className={`p-4 rounded-md border ${statusColor}`}>
-                      <p className="text-base font-normal text-white">
-                        {event.description}
-                      </p>
-                    </div>
-                  </li>
-              );
-            })}
-          </ol>
+                  {/* Date de l'événement */}
+                  <time className="block mb-2 text-sm font-normal text-gray-300">
+                    {event.date}
+                  </time>
 
-          <div className="border-none"></div>
-        </div>
+                  {/* Description de l'événement dans un encadré transparent */}
+                  <div className={`p-4 rounded-md border ${statusColor}`}>
+                    <p className="text-base font-normal text-white">
+                      {event.description}
+                    </p>
+                  </div>
+                </li>
+            );
+          })}
+        </ol>
+
+        <div className="border-none"></div>
       </div>
+    </div>
   );
 };
 
