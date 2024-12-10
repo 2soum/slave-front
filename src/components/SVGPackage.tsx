@@ -124,7 +124,7 @@ const BackgroundSVG: React.FC<BackgroundSVGProps> = ({
   useEffect(() => {
     const moodInterval = setInterval(() => {
       const random = Math.random();
-      if (random < 0.6) { // 30% de chance de changer d'humeur
+      if (random < 0.7) { // 30% de chance de changer d'humeur
         const newMood = getRandomMood();
         if (newMood !== moodState) { // Change seulement si c'est une humeur différente
           setMoodState(newMood);
