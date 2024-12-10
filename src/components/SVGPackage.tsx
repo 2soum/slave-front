@@ -6,7 +6,7 @@ interface SVGFilterProps {
   intensity: number;
 }
 
-const FullGlowFilter: React.FC<SVGFilterProps> = ({ id, color, intensity }): JSX.Element => {
+const FullGlowFilter: React.FC<SVGFilterProps> = ({ color, intensity }): JSX.Element => {
   const hex2rgb = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;

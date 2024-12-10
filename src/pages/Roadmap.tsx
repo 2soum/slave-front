@@ -1,14 +1,14 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Header from '../components/Header';
-import BackgroundSVG from "../components/SVGPackage.tsx";
 import Timeline from '../components/Timeline.tsx';
+import AnimatedFace from '../components/AnimatedFace.tsx';
 
 const PackageRoadmap: React.FC = () => {
     return (
         <div className="relative flex flex-col min-h-screen">
             <div className="absolute inset-0 z-0">
-                <BackgroundSVG />
+                <AnimatedFace />
             </div>
 
             <div className="relative z-10">
