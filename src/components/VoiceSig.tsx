@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { sendAudioToAPI } from '../service/apiService';
 
 interface VisualizerOptions {
   smoothing: number;
@@ -21,9 +22,11 @@ const VoiceSig: React.FC = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const freqsRef = useRef<Uint8Array | null>(null);
+  const audioChunks = useRef<Blob[]>([]);
 
   const opts: VisualizerOptions = {
     smoothing: 0.8,
@@ -49,7 +52,17 @@ const VoiceSig: React.FC = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const input = context.createMediaStreamSource(stream);
       input.connect(analyserNode);
-      
+
+      const recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.current.push(event.data);
+        }
+      };
+
+      setMediaRecorder(recorder);
+      recorder.start();
+
       setAudioContext(context);
       setAnalyser(analyserNode);
       freqsRef.current = new Uint8Array(analyserNode.frequencyBinCount);
@@ -59,15 +72,57 @@ const VoiceSig: React.FC = () => {
     }
   };
 
-  const freq = (channel: number, i: number): number => {
-    const band = (channel * 5 + i * 6);
-    return freqsRef.current?.[band] || 0;
+  const stopRecording = async (): Promise<void> => {
+    setIsRecording(false);
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (audioContext && audioContext.state !== "closed") {
+      audioContext.close();
+      setAudioContext(null);
+    }
+    setAnalyser(null);
+    freqsRef.current = null;
+
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+        audioChunks.current = []; // Reset the chunks
+
+        console.log("Audio recording stopped. Sending to API...");
+
+        try {
+          const response = await sendAudioToAPI(audioBlob);
+          console.log("API response:", response);
+        } catch (error) {
+          console.error("Error sending audio to API:", error);
+        }
+      };
+    }
   };
 
-  const scale = (i: number): number => {
-    const x = Math.abs(2 - i);
-    const s = 3 - x;
-    return (s / 3) * opts.amp;
+  const visualize = (): void => {
+    if (!analyser || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    analyser.smoothingTimeConstant = opts.smoothing;
+    analyser.fftSize = 512;
+    analyser.minDecibels = opts.minDecibels;
+
+    if (freqsRef.current) {
+      analyser.getByteFrequencyData(freqsRef.current);
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < 6; i++) {
+      drawPath(ctx, i);
+    }
+
+    animationFrameRef.current = requestAnimationFrame(visualize);
   };
 
   const drawPath = (ctx: CanvasRenderingContext2D, channel: number): void => {
@@ -109,34 +164,22 @@ const VoiceSig: React.FC = () => {
     ctx.stroke();
   };
 
-  const visualize = (): void => {
-    if (!analyser || !canvasRef.current) return;
+  const freq = (channel: number, i: number): number => {
+    const band = (channel * 5 + i * 6);
+    return freqsRef.current?.[band] || 0;
+  };
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    analyser.smoothingTimeConstant = opts.smoothing;
-    analyser.fftSize = 512;
-    analyser.minDecibels = opts.minDecibels;
-    
-    if (freqsRef.current) {
-      analyser.getByteFrequencyData(freqsRef.current);
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < 6; i++) {
-      drawPath(ctx, i);
-    }
-
-    animationFrameRef.current = requestAnimationFrame(visualize);
+  const scale = (i: number): number => {
+    const x = Math.abs(2 - i);
+    const s = 3 - x;
+    return (s / 3) * opts.amp;
   };
 
   useEffect(() => {
     if (isRecording && canvasRef.current) {
       const canvas = canvasRef.current;
-      canvas.width = 800;  // Réduit la largeur
-      canvas.height = 150; // Réduit la hauteur
+      canvas.width = 800;
+      canvas.height = 150;
       visualize();
     }
 
@@ -144,53 +187,82 @@ const VoiceSig: React.FC = () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      if (audioContext) {
+      if (audioContext && audioContext.state !== "closed") {
         audioContext.close();
       }
     };
   }, [isRecording]);
 
- return (
-  <div className="fixed z-50 bottom-0 left-0 right-0 flex justify-center pb-8">
-    <div className="flex justify-center items-center">
-      {!isRecording ? (
-        <div className="relative group">
-          <button
-            onClick={startRecording}
-            className="relative inline-block p-px font-semibold leading-6 text-white bg-gray-800 shadow-2xl cursor-pointer rounded-xl shadow-zinc-900 transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95"
-          >
-            <span
-              className="absolute inset-0 rounded-xl bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-            ></span>
-            <span className="relative z-10 block px-6 py-3 rounded-xl bg-gray-950">
-              <div className="relative z-10 flex items-center space-x-2">
-                <span className="transition-all duration-500 group-hover:translate-x-1">
-                  Start Recording
-                </span>
-                <svg
-                  className="w-6 h-6 transition-transform duration-500 group-hover:translate-x-1"
-                  aria-hidden="true"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    clipRule="evenodd"
-                    d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
-                    fillRule="evenodd"
-                  ></path>
-                </svg>
-              </div>
-            </span>
-          </button>
-        </div>
-      ) : (
-        <canvas ref={canvasRef} className="w-64 h-32" />
-      )}
+  return (
+    <div className="fixed z-50 bottom-0 left-0 right-0 flex justify-center pb-8">
+      <div className="flex justify-center items-center">
+        {!isRecording ? (
+          <div className="relative group">
+            <button
+              onClick={startRecording}
+              className="relative inline-block p-px font-semibold leading-6 text-white bg-gray-800 shadow-2xl cursor-pointer rounded-xl shadow-zinc-900 transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95"
+            >
+              <span
+                className="absolute inset-0 rounded-xl bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              ></span>
+              <span className="relative z-10 block px-6 py-3 rounded-xl bg-gray-950">
+                <div className="relative z-10 flex items-center space-x-2">
+                  <span className="transition-all duration-500 group-hover:translate-x-1">
+                    Start Recording
+                  </span>
+                  <svg
+                    className="w-6 h-6 transition-transform duration-500 group-hover:translate-x-1"
+                    aria-hidden="true"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      clipRule="evenodd"
+                      d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                      fillRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div className="relative group">
+            <button
+              onClick={stopRecording}
+              className="relative inline-block p-px font-semibold leading-6 text-white bg-red-800 shadow-2xl cursor-pointer rounded-xl shadow-zinc-900 transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95"
+            >
+              <span
+                className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-400 via-pink-500 to-purple-500 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              ></span>
+              <span className="relative z-10 block px-6 py-3 rounded-xl bg-gray-950">
+                <div className="relative z-10 flex items-center space-x-2">
+                  <span className="transition-all duration-500 group-hover:translate-x-1">
+                    Stop Recording
+                  </span>
+                  <svg
+                    className="w-6 h-6 transition-transform duration-500 group-hover:translate-x-1"
+                    aria-hidden="true"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      clipRule="evenodd"
+                      d="M5 5a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 .75.75v8.5a.75.75 0 0 1-.75.75h-8.5A.75.75 0 0 1 5 13.5V5Z"
+                      fillRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+              </span>
+            </button>
+            <canvas ref={canvasRef} className="w-64 h-32" />
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
-
+  );
 };
 
 export default VoiceSig;
