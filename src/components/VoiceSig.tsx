@@ -1,3 +1,4 @@
+// src/components/VoiceSig.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { sendAudioToAPI } from '../service/apiService';
 
@@ -18,7 +19,13 @@ interface VisualizerOptions {
   amp: number;
 }
 
-const VoiceSig: React.FC = () => {
+interface VoiceSigProps {
+  updateColor: (newColor: string) => void;
+  updateIntensity: (newIntensity: number) => void;
+  updateApiResponseText: (newText: string) => void;
+}
+
+const VoiceSig: React.FC<VoiceSigProps> = ({ updateColor, updateIntensity, updateApiResponseText }) => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
@@ -95,6 +102,11 @@ const VoiceSig: React.FC = () => {
         try {
           const response = await sendAudioToAPI(audioBlob);
           console.log("API response:", response);
+
+          // Update color and intensity based on the response or any other logic
+          updateColor(response.output); // Example color
+          updateIntensity(1.5); // Example intensity
+          updateApiResponseText(response.output); // Example API response text
         } catch (error) {
           console.error("Error sending audio to API:", error);
         }

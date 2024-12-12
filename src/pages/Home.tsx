@@ -1,16 +1,33 @@
-    // src/pages/Home.tsx
+// src/pages/Home.tsx
+import React, { useState } from 'react';
 import VoiceSig from '../components/VoiceSig';
 import WelcomeOverlay from '../components/WelcomeOverlay';
 import Header from '../components/Header';
 import AnimatedFace from '../components/AnimatedFace';
-const Home = () => {
+
+const Home: React.FC = () => {
+  const [color, setColor] = useState<string>('#FFFFFF');
+  const [intensity, setIntensity] = useState<number>(1);
+  const [apiResponseText, setApiResponseText] = useState<string>('');
+
+  const updateColor = (newColor: string) => {
+    setColor(newColor);
+  };
+
+  const updateIntensity = (newIntensity: number) => {
+    setIntensity(newIntensity);
+  };
+
+  const updateApiResponseText = (newText: string) => {
+    setApiResponseText(newText);
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
-      <AnimatedFace />
-      
-      <VoiceSig />
-      <WelcomeOverlay />
+      <AnimatedFace color={color} intensity={intensity} />
+      <VoiceSig updateColor={updateColor} updateIntensity={updateIntensity} updateApiResponseText={updateApiResponseText} />
+      <WelcomeOverlay apiResponseText={apiResponseText} />
     </div>
   );
 };
