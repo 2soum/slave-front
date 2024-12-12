@@ -30,6 +30,7 @@ const VoiceSig: React.FC<VoiceSigProps> = ({ updateColor, updateIntensity, updat
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const freqsRef = useRef<Uint8Array | null>(null);
@@ -96,6 +97,8 @@ const VoiceSig: React.FC<VoiceSigProps> = ({ updateColor, updateIntensity, updat
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
         audioChunks.current = []; // Reset the chunks
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioURL(audioUrl);
 
         console.log("Audio recording stopped. Sending to API...");
 
@@ -272,6 +275,24 @@ const VoiceSig: React.FC<VoiceSigProps> = ({ updateColor, updateIntensity, updat
             <canvas ref={canvasRef} className="w-64 h-32" />
           </div>
         )}
+        {audioURL && (
+            <audio controls className="mt-4">
+              <source src={audioURL} type="audio/webm"/>
+              Your browser does not support the audio element.
+            </audio>
+          // <div className="flex flex-col items-center">
+          //   <audio controls src={audioURL} className="w-full" />
+          //   <button
+          //       onClick={() => {
+          //         const audio = new Audio(audioURL);
+          //         audio.play();
+          //       }}
+          //       className="mt-2 bg-green-600 text-white px-4 py-2 rounded"
+          //   >
+          //     Replay Recording
+          //   </button>
+          // </div>
+          )}
       </div>
     </div>
   );
