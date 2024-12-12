@@ -34,10 +34,13 @@ const VoiceSig: React.FC<VoiceSigProps> = ({
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const freqsRef = useRef<Uint8Array | null>(null);
   const audioChunks = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const hexToRgb = (hex: string): [number, number, number] => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -108,8 +111,8 @@ const VoiceSig: React.FC<VoiceSigProps> = ({
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
         audioChunks.current = [];
-
-        console.log("Audio recording stopped. Sending to API...");
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioURL(audioUrl);
 
         try {
           const response = await sendAudioToAPI(audioBlob);
@@ -124,16 +127,28 @@ const VoiceSig: React.FC<VoiceSigProps> = ({
     }
   };
 
-  const freq = (channel: number, i: number): number => {
-    const band = (channel * 5 + i * 6);
-    return freqsRef.current?.[band] || 0;
+  const playAudio = (): void => {
+    if (audioURL) {
+      const audio = new Audio(audioURL);
+      audioRef.current = audio;
+      audio.play();
+      setIsPlaying(true);
+    }
   };
 
-  const scale = (i: number): number => {
-    const x = Math.abs(2 - i);
-    const s = 3 - x;
-    const opts = getOpts();
-    return (s / 3) * opts.amp;
+  const pauseAudio = (): void => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const toggleAudio = (): void => {
+    if (isPlaying) {
+      pauseAudio();
+    } else {
+      playAudio();
+    }
   };
 
   const drawPath = (ctx: CanvasRenderingContext2D, channel: number): void => {
@@ -180,6 +195,18 @@ const VoiceSig: React.FC<VoiceSigProps> = ({
     ctx.lineTo(0, m);
     ctx.fill();
     ctx.stroke();
+  };
+
+  const freq = (channel: number, i: number): number => {
+    const band = (channel * 5 + i * 6);
+    return freqsRef.current?.[band] || 0;
+  };
+
+  const scale = (i: number): number => {
+    const x = Math.abs(2 - i);
+    const s = 3 - x;
+    const opts = getOpts();
+    return (s / 3) * opts.amp;
   };
 
   const visualize = (): void => {
@@ -300,6 +327,28 @@ const VoiceSig: React.FC<VoiceSigProps> = ({
             </div>
           )}
         </div>
+
+        {audioURL && (
+          <div className="fixed bottom-6 left-6 flex items-center justify-center w-14 h-14 bg-blue-500 rounded-full shadow-lg hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-300 transition-all duration-300">
+            <button onClick={toggleAudio} className="w-full h-full flex items-center justify-center">
+              <svg
+                className="w-7 h-7 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                {isPlaying ? (
+                  // Icône Pause (deux barres)
+                  <path d="M6 4H8V16H6zM12 4H14V16H12z"/>
+                ) : (
+                  // Icône Play (triangle)
+                  <path d="M6 4.5V15.5a.5.5 0 0 0 .75.43l8.75-5.75a.5.5 0 0 0 0-.86L6.75 4.07A.5.5 0 0 0 6 4.5z"/>
+                )}
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
