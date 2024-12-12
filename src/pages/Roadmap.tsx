@@ -5,10 +5,13 @@ import Timeline from '../components/Timeline.tsx';
 import AnimatedFace from '../components/AnimatedFace.tsx';
 
 const PackageRoadmap: React.FC = () => {
+    const color = "#ff0000"; // Define the color variable
+    const intensity = 0.5; // Define the intensity variable
+
     return (
         <div className="relative flex flex-col min-h-screen">
             <div className="absolute inset-0 z-0">
-                <AnimatedFace />
+            <AnimatedFace color={color} intensity={intensity} />
             </div>
 
             <div className="relative z-10">
