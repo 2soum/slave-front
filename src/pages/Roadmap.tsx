@@ -8,7 +8,7 @@ const PackageRoadmap: React.FC = () => {
     return (
         <div className="relative flex flex-col min-h-screen">
             <div className="absolute inset-0 z-0">
-                <AnimatedFace />
+                <AnimatedFace intensity={0} />
             </div>
 
             <div className="relative z-10">

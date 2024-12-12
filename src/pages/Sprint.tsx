@@ -7,7 +7,7 @@ const Sprint = () => {
   return (
       <div className="min-h-screen">
         <Header />
-        <AnimatedFace />
+        <AnimatedFace intensity={0} />
         <Sprints />
       </div>
   );

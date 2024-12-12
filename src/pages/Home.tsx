@@ -1,4 +1,3 @@
-// src/pages/Home.tsx
 import React, { useState } from 'react';
 import VoiceSig from '../components/VoiceSig';
 import WelcomeOverlay from '../components/WelcomeOverlay';
@@ -9,6 +8,7 @@ const Home: React.FC = () => {
   const [color, setColor] = useState<string>('#FFFFFF');
   const [intensity, setIntensity] = useState<number>(1);
   const [apiResponseText, setApiResponseText] = useState<string>('');
+  const [isOverlayVisible, setIsOverlayVisible] = useState<boolean>(true);
 
   const updateColor = (newColor: string) => {
     setColor(newColor);
@@ -22,12 +22,23 @@ const Home: React.FC = () => {
     setApiResponseText(newText);
   };
 
+  const hideOverlay = () => {
+    setIsOverlayVisible(false);
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
       <AnimatedFace color={color} intensity={intensity} />
-      <VoiceSig updateColor={updateColor} updateIntensity={updateIntensity} updateApiResponseText={updateApiResponseText} />
-      <WelcomeOverlay apiResponseText={apiResponseText} />
+      <VoiceSig 
+        updateColor={updateColor}
+        updateIntensity={updateIntensity}
+        updateApiResponseText={updateApiResponseText}
+        toggleOverlay={hideOverlay} currentColor={''}      />
+      <WelcomeOverlay 
+        apiResponseText={apiResponseText} 
+        isVisible={isOverlayVisible} 
+      />
     </div>
   );
 };
