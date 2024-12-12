@@ -137,7 +137,7 @@ const VoiceSig: React.FC<VoiceSigProps> = ({
   };
 
   const drawPath = (ctx: CanvasRenderingContext2D, channel: number): void => {
-    const baseColor = hexToRgb(currentColor);
+    const baseColor = hexToRgb(currentColor || '#FFFFFF');
     const lighterColor = baseColor.map(c => Math.min(255, c + 40));
     const darkerColor = baseColor.map(c => Math.max(0, c - 40));
     
@@ -242,6 +242,9 @@ const VoiceSig: React.FC<VoiceSigProps> = ({
                   toggleOverlay();
                 }}
                 className="relative inline-block p-px font-semibold leading-6 text-white bg-gray-800 shadow-2xl cursor-pointer rounded-xl shadow-zinc-900 transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95"
+                style={{
+                  '--button-gradient': `linear-gradient(90deg, ${currentColor || '#4fd1c5'}, ${currentColor || '#3b82f6'}, ${currentColor || '#9f7aea'})`
+                } as React.CSSProperties}
               >
                 <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
                 <span className="relative z-10 block px-6 py-3 rounded-xl bg-gray-950">
